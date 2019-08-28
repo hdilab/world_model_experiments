@@ -14,6 +14,7 @@ import json
 import train_rnn
 import time
 import sys
+import pickle
 
 
 def block_print():
@@ -43,18 +44,21 @@ def simulate_batch(batch_num):
         device = torch.device("cpu")
         vae_model = vae.ConvVAE(VAE_Z_SIZE, VAE_KL_TOLERANCE)
         if os.path.exists("checkpoints/vae_checkpoint.pth"):
-            vae_model.load_state_dict(torch.load("checkpoints/vae_checkpoint.pth"))
+            vae_model.load_state_dict(torch.load("checkpoints/vae_checkpoint.pth", map_location=device))
         vae_model = vae_model.eval()
         vae_model.to(device)
 
         rnn_model = rnn.MDMRNN(MDN_NUM_MIXTURES, MDN_HIDDEN_SIZE, MDN_INPUT_SIZE, MDN_NUM_LAYERS, MDN_BATCH_SIZE, 1, MDN_OUTPUT_SIZE)
         if os.path.exists("checkpoints/rnn_checkpoint.pth"):
-            rnn_model.load_state_dict(torch.load("checkpoints/rnn_checkpoint.pth"))
+            rnn_model.load_state_dict(torch.load("checkpoints/rnn_checkpoint.pth", map_location=device))
         rnn_model.to(device)
         rnn_model = rnn_model.eval()
 
-        if os.path.exists("checkpoints.controller_checkpoint.json"):
-            params = json.load("checkpoints.controller_checkpoint.json")
+        if os.path.exists("checkpoints/params.pkl"):
+            fo = open('checkpoints/params.pkl', 'rb')
+            params = pickle.load(fo)
+            fo.close()
+            print("Loaded existing params")
         else:
             cma_num_params = CMA_NUM_ACTIONS * CMA_EMBEDDING_SIZE + CMA_NUM_ACTIONS
             params = controller.get_random_model_params(cma_num_params, np.random.rand()*0.01)

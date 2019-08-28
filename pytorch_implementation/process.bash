@@ -1,15 +1,13 @@
-export CUDA_VISIBLE_DEVICES="";
+xvfb-run -a -s "-screen 0 1400x900x24 +extension RANDR" -- python generate_data.py
 
-xvfb-run -a -s "-screen 0 1400x900x24 +extension RANDR" -- python generate_data.py;
+echo "Completed generation of data"
 
-unset CUDA_VISIBLE_DEVICES;
+python train_vae.py
 
-python train_vae.py;
+python series.py
 
-python series.py;
+python train_rnn.py
 
-python train_rnn.py;
+echo "Completed VAE and RNN training"
 
-export CUDA_VISIBLE_DEVICES="";
-
-xvfb-run -a -s "-screen 0 1400x900x24 +extension RANDR" -- python train_v_m_c.py;
+xvfb-run -a -s "-screen 0 1400x900x24 +extension RANDR" -- python train_v_m_c.py
