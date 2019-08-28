@@ -63,30 +63,60 @@ To do so add the following line at the beginning of extract.bash
 set CUDA_VISIBLE_DEVICES=-1
 ```
 
+Finally run the command
+```
+sh ./extract.bash
+```
+
+#### Running on a device with less computing power
+
 If running on a device with a lower number of cores we can still generate all the samples.
 In order to do se we need to change the bash script by reducing the number of parallel threads to say 8.
 We could then use a wait command and then rerun the loop as many times as we want.
 
 
 ```
-for i in `seq 1 8`;
+for j in `seq 1 4`;
 do
-  echo worker $i
-  # on cloud:
-  xvfb-run -a -s "-screen 0 1400x900x24 +extension RANDR" -- python extract.py &
-  # on macbook for debugging:
-  #python extract.py &
-  sleep 1.0
+    for i in `seq 1 16`;
+    do
+      echo worker $i
+      # on cloud:
+      xvfb-run -a -s "-screen 0 1400x900x24 +extension RANDR" -- python extract.py &
+      # on macbook for debugging:
+      #python extract.py &
+      sleep 1.0
+    done
+    wait
 done
 ```
 
-If generating a lower number of files you would then need to change the file vae_train.py to reduce the number of files 
-when loading your dataset.
+Instead of using a lower number of files we can instead modify the code to not load all the files in memory while training the VAE.
+To do so Comment the following lines from line 65 onwards
 
-Finally run the command
-```
-sh ./extract.bash
-```
+#dataset = create_dataset(filelist)
+
+# split into batches:
+#total_length = len(dataset)
+#num_batches = int(np.floor(total_length/batch_size))
+#print("num_batches", num_batches)
+
+# Divide File list into group of 5000.
+# Process each group. Will take slightly longer but will not require so much memory
+
+Add the following line to dive the file list into chunks. You could reduce the size even further than 5000.
+file_lists_chunks = [filelist[i * 5000:(i + 1) * 5000] for i in range((len(filelist) + 5000 - 1) // 5000)]
+
+Finally add an extra loop on line 90 to iterate through the chunks and create the datasets.
+for file_list in file_lists_chunks:
+    dataset = create_dataset(file_list, len(file_list), 1000)
+    total_length = len(dataset)
+    num_batches = int(np.floor(total_length/batch_size))
+    np.random.shuffle(dataset)
+
+
+
+
 
 
 #### Train VAE and MDM-RNN
