@@ -94,21 +94,21 @@ done
 Instead of using a lower number of files we can instead modify the code to not load all the files in memory while training the VAE.
 To do so Comment the following lines from line 65 onwards
 
-#dataset = create_dataset(filelist)
+\#dataset = create_dataset(filelist)
 
-# split into batches:
-#total_length = len(dataset)
-#num_batches = int(np.floor(total_length/batch_size))
-#print("num_batches", num_batches)
+\# split into batches:
+\#total_length = len(dataset)
+\#num_batches = int(np.floor(total_length/batch_size))
+\#print("num_batches", num_batches)
 
-# Divide File list into group of 5000.
-# Process each group. Will take slightly longer but will not require so much memory
+\# Divide File list into group of 5000.
+\# Process each group. Will take slightly longer but will not require so much memory
 
-Add the following line to dive the file list into chunks. You could reduce the size even further than 5000.
+Add the following line to divide the file list into chunks. You could reduce the size even further than 5000.
 file_lists_chunks = [filelist[i * 5000:(i + 1) * 5000] for i in range((len(filelist) + 5000 - 1) // 5000)]
 
 Finally add an extra loop on line 90 to iterate through the chunks and create the datasets.
-for file_list in file_lists_chunks:
+for file_list in file_lists_chunks:<br/>
     dataset = create_dataset(file_list, len(file_list), 1000)
     total_length = len(dataset)
     num_batches = int(np.floor(total_length/batch_size))
